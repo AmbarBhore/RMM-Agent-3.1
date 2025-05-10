@@ -8,7 +8,7 @@ pipeline {
 	stages {
 		stage('clone repo') {
 			steps {
-				git credentialsId: 'github-config', url: 'https://github.com/AmbarBhore/RMM-Agent-3.1.git'			}
+				git branch: 'main', credentialsId: 'github-config', url: 'https://github.com/AmbarBhore/RMM-Agent-3.1.git'			}
 		}
 		stage('Build') {
 			steps {
