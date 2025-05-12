@@ -1,7 +1,7 @@
 pipeline {
 	agent any
 	environment {
-		DOCKER_IMAGE = 'ambarbhore1234@rmm-agent:3.1'
+		DOCKER_IMAGE = 'ambarbhore1234/rmmagent'
 		KUBECONFIG_CRED_ID = 'kubeconfig'
 	}
 	
