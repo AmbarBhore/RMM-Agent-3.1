@@ -15,5 +15,20 @@ pipeline {
 				sh 'mvn clean package'
 			}
 		}
+		stage('Image push to docker-hub') {
+			steps {
+				withCredentials([usernamePassword(credentialsId: 'dockerhub', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
+					sh '''
+					   echo "Building an docker image : $DOCKER_IMAGE"
+					   docker build -t $DOCKER_IMAGE .
+						
+					   echo "Logging into the Docker hub"
+				           echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin						
+					   echo "pushing image to the docker hub"
+					   docker push $DOCKER_IMAGE
+				        '''
+				}
+			}
+		}
 	}
 }
