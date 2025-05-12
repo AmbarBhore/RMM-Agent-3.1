@@ -20,7 +20,7 @@ pipeline {
 				withCredentials([usernamePassword(credentialsId: 'dockerhub', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
 					sh '''
 					   echo "Building an docker image : $DOCKER_IMAGE"
-					   docker build -t $DOCKER_IMAGE .
+					   docker build -t $DOCKER_IMAGE:rmmagent .
 						
 					   echo "Logging into the Docker hub"
 				           echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin						
