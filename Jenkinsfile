@@ -30,23 +30,34 @@ pipeline {
 				}
 			}
 		}
-		stage('Deploy on kubernetes') {
-			steps {
-				withCredentials([file(credentialsId: "${KUBECONFIG_CRED_ID}", variable: 'KUBECONFIG_FILE')]) {
-					sh '''
-					    echo "setting kubeconfig access to the cluster"
-					    export KUBECONFIG=$KUBECONFIG_FILE
+		stage('Blue-Green Deployment') {
+  			  steps {
+        			withCredentials([file(credentialsId: "${KUBECONFIG_CRED_ID}", variable: 'KUBECONFIG_FILE')]) {
+            				sh '''
+                			   echo "Setting kubeconfig access"
+                			   export KUBECONFIG=$KUBECONFIG_FILE
 
-					    echo "Deploying to the kubernetes cluster"
-					    kubectl apply -f k8s/deployment.yaml
-					    kubectl apply -f k8s/service.yaml
+               	 			  GREEN_EXISTS=$(kubectl get deploy green-deployment --ignore-not-found)
+                			  if [ -z "$GREEN_EXISTS" ]; then
+                    				  echo "Creating green deployment"
+                   			  	  kubectl apply -f k8s/deployment-green.yaml
+                    				  kubectl apply -f k8s/service.yaml
+                			  else
+                    				  echo "Green already exists, updating"
+                        			  kubectl set image deployment/green-deployment rmmagent-container=$DOCKER_IMAGE:rmmagent
+                			  fi
 
-					    echo "deployment is done"
-					    kubectl get pods
-					    kubectl get svc
-					'''
-				}
-			}
+                			  echo "Waiting for green deployment to be ready..."
+                			  kubectl rollout status deployment/green-deployment
+
+                			  echo "Switching service to green"
+                			  kubectl patch service rmmagent-service -p '{"spec":{"selector":{"app":"green-rmmagent"}}}'
+
+                			  echo "Blue-Green switch complete"
+               	 			  kubectl get pods -o wide
+            				'''
+        			}
+    			  }	
 		}
 	}
 }
