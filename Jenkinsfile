@@ -30,26 +30,34 @@ pipeline {
 				}
 			}
 		}
-		stage('Deploy on Kubernetes (Green)') {
-    			steps {
+		stage('Blue-Green Deployment') {
+  			  steps {
         			withCredentials([file(credentialsId: "${KUBECONFIG_CRED_ID}", variable: 'KUBECONFIG_FILE')]) {
             				sh '''
-                				echo "Setting kubeconfig access"
-                				export KUBECONFIG=$KUBECONFIG_FILE
+                			   echo "Setting kubeconfig access"
+                			   export KUBECONFIG=$KUBECONFIG_FILE
 
-                				echo "Deploying GREEN environment"
-                				kubectl apply -f k8s/deployment-green.yaml
+               	 			  GREEN_EXISTS=$(kubectl get deploy green-deployment --ignore-not-found)
+                			  if [ -z "$GREEN_EXISTS" ]; then
+                    				  echo "Creating green deployment"
+                   			  	  kubectl apply -f k8s/deployment-green.yaml
+                    				  kubectl apply -f k8s/service.yaml
+                			  else
+                    				  echo "Green already exists, updating"
+                        			  kubectl set image deployment/green-deployment rmmagent-container=$DOCKER_IMAGE:rmmagent
+                			  fi
 
-                				echo "Validating GREEN deployment"
-                				kubectl rollout status deployment/rmmagent-green
+                			  echo "Waiting for green deployment to be ready..."
+                			  kubectl rollout status deployment/green-deployment
 
-               					 echo "Switching service selector to GREEN"
-               					 kubectl patch service rmmagent-service -p '{"spec": {"selector": {"app": "rmmagent", "version": "green"}}}'
+                			  echo "Switching service to green"
+                			  kubectl patch service rmmagent-service -p '{"spec":{"selector":{"app":"green-rmmagent"}}}'
 
-              					 echo "Green deployment is now live"
-            				 '''
-       				 }	
-		        }
+                			  echo "Blue-Green switch complete"
+               	 			  kubectl get pods -o wide
+            				'''
+        			}
+    			  }	
 		}
 	}
 }

@@ -1,21 +1,21 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: rmmagent-green
+  name: green-deployment
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: rmmagent
+      app: green-rmmagent
       version: green
     template:
       metadata:
         labels:
-          app: rmmagent
+          app: green-rmmagent
           version: green
       spec:
         containers:
-        - name: rmmagent
+        - name: rmmagent-container
           image: ambarbhore1234/rmmagent:rmmagent
           ports:
           - containerPort: 8080
