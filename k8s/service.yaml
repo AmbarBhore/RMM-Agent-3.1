@@ -6,6 +6,7 @@ spec:
   type: NodePort
   selector:
     app: rmm-agent
+    version: green
   ports:
     - port: 80
       targetPort: 8080
